@@ -1,0 +1,224 @@
+---
+title: Symmetric-key encryption in Haskell
+author: Leo Zhang
+tags: haskell, cryptographic, aes
+---
+
+## Introduction
+Symmetric key algorithems use the same cryptographic key for both encryption of plaintext and decryption of ciphertext.
+
+ciphertext are bit sequence, which has no meaning. Without the secret key, ciphertext can not be converted back to the original plaintext.
+
+Most popular Symmetric-key algorithems includes: AES, Blowfish, ChaCha, etc
+
+## Haskell implementations
+Haskell community has an awesome library [`cryptonite`](https://hackage.haskell.org/package/cryptonite) that provides implementations for the popular cryptographic algorithems.
+
+For Symmetric-key algorithems, they are all grouped under the namespace `Crypto.Cipher`. Let's get start with AES256 and see how it works.
+
+## Create a secretKey for AES256 algorithem
+
+AES algorithem has different modes for encrypting/decrypting messages. I'd like to start with ECB mode (Electronic CodeBook mode). Although ECB mode is not very secure, it is simpliest one, so easy to explain and give you a taste of how everything works.
+
+Alright, first, let's create a secret.
+
+A secret is a random string that is used to encrypt plaintext into ciphertext.
+
+```
+{-# LANGUAGE OverloadedStrings #-}
+
+import Data.ByteString (ByteString)
+
+secret :: ByteString
+secret = "0123-4567-890A-BCDE"
+```
+
+The above code defines a ByteString `secret` with the value `"0123-4567-890A-BCDE"`.
+
+`import Data.ByteString (ByteString)` is to tell Haskell where the type `ByteString` is defined. `(ByteString)` means import only the type definition from the module.
+
+What does `{-# LANGUAGE OverloadedStrings #-}` do?
+
+It's called language extension, that enables certain Haskell feature. In this case, `OverloadedStrings` language extension is enabled to be able to create a ByteString value with double quotes, like this `"0123-4567-890A-BCDE"`. This language extension is probably the most common one that you would like to turn on.
+
+Alright, let's try it out! Haskell provides a very powerful [REPL](https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop), called ghci that allows to experiment with the code.
+
+To start `ghci`, we use `stack ghci`. Wait, what is `stack` then? Well, it's not important for this post.
+```
+stack ghci
+ghci> :load src/Symmetric.hs
+[1 of 1] Compiling Symmetric        ( src/Symmetric.hs, interpreted )
+Ok, one module loaded.
+ghci> secret
+"0123-4567-890A-BCDE"
+```
+
+We can see `Symmetric.hs` is correctly being compiled. And `secretKey` shows the correct string we defined.
+
+## Make SecretKey
+A ByteString secret is not a secret key yet, we need to turn the secret into a secret key. However, not every string can be converted into a secret key.
+
+If the input string is not convertable, then we should get an error. And if convertable, then we will get a AES256 value, which means we will get either an error or a AES256 value. And the function definition is just like this:
+
+```
+makeSecretKey :: ByteString -> Either CryptoError AES256
+makeSecretKey secret = eitherCryptoError (cipherInit secret)
+```
+
+`makeSecretKey` takes the secret string as input, and returns a `Either CryptoError AES256`. This type is an Union Type. It's a type that contains two variations, as you can guess, it's either a CryptoError or a AES256 value (which is the secret key).
+
+```
+stack ghci
+ghci> makeSecretKey secret
+
+<interactive>:30:1: error:
+    • No instance for (Show AES256) arising from a use of ‘print’
+    • In a stmt of an interactive GHCi command: print it
+```
+
+Oops, when we try making a secret key, it returns the above error.
+
+This is a very common error, basically says, ghci doesn't know how to convert the returned type into a string in order to print it.
+
+Well, seems like the secret key is not printable. That's OK, we can still know if it's successfully converted or not:
+
+```
+ghci> import Data.Either
+ghci> isLeft (makeSecretKey secret)
+False
+ghci> isRight (makeSecretKey secret)
+True
+ghci> Right s = makeSecretKey secret
+ghci> :t s
+s :: AES256
+ghci> :set -XOverloadedStrings
+ghci> isLeft (makeSecretKey "b")
+True
+ghci> Left err = makeSecretKey "b"
+ghci> err
+CryptoError_KeySizeInvalid
+```
+
+We used `isLeft` and `isRight` to test and since we got a Right value, we can destruct it and get the secretKey `s`. and we use `:t` in the REPL to confirm that the type for `s` is `AES256`
+
+In real world, we won't parse the secret key like this, but here it's just to show how `makeSecretKey` works.
+
+We then turned on the language extension `OverloadedStrings` in the REPL to be able to make a ByteString secret with `"b"`.
+
+And when we pass that bad key to makeSecretKey, it returns CryptoError, which says `KeySizeInvalid`.
+
+## Functions for encrypting and decrypting message with ECB mode
+```
+{-# LANGUAGE OverloadedStrings #-}
+
+import Data.ByteString (ByteString)
+import Crypto.Cipher.AES (AES256(..))
+import Crypto.Cipher.Types (ecbEncrypt, ecbDecrypt)
+import Crypto.Error (CryptoError(..))
+
+secretKey :: ByteString
+secretKey = "0123-4567-890A-BCDE"
+
+encryptMsgECB :: AES256 -> ByteString -> ByteString
+encryptMsgECB secKey msg = ecbEncrypt secKey msg
+
+decryptMsgECB :: AES256 -> ByteString -> ByteString
+decryptMsgECB secKey msg = ecbDecrypt secKey msg
+```
+
+To encrypt message with ECB mode, we import the two functions `ecbEncrypt`, and `ecbDecrypt` from `Crypto.Cipher.Types` namespace.
+
+And we define a function `encryptMsgECB` with the type signature `AES256 -> ByteString -> ByteString`. This type signature reads as: it takes a value of type `AES256`, and another value of type `ByteString`, then return a `ByteString` value.
+
+And the next line is the function body which says pass the two variables to the `ecbEncrypt` function. And the `decryptMsgECB` function is pretty much the same.
+
+Let's test them out in ghci.
+
+Since we imported a few types and functions, we need to add them to the import
+
+```
+ghci> encryptMsgECB s "this is a secret"
+"\217=\148e\143%Pb\140\226h\132\ENQ\a\206\191"
+
+ghci> decryptMsgECB s $ encryptMsgECB s "this is a secret"
+"this is a secret"
+```
+
+Nice, we encrypted a plaintext into ciphertext, which is completely different than the plaintext. And decrypted it back to the original plaintext with the same secret key.
+
+But how does the second statement works? What does the `$` (dollar sign) do?
+
+`$` in Haskell acts like operators in order to avoid parentheses.
+
+So `decryptMsgECB s $ encryptMsgECB s "this is a secret"` will be executed as `decryptMsgECB s (encryptMsgECB s "this is a secret")`. Then, the result of `encryptMsgECB s "this is a secret"` will be passed to `decryptMsgECB s`. And then the result got printed out.
+
+What is `decryptMsgECB s` then? Isn't it got executed already? How can it take another value to execute again?
+
+Right! We are using an important Haskell feature here. Let me explain.
+
+`decryptMsgECB` is a function that takes two parameters - the secret key and the ciphertext. If we pass in only one parameter `s` to it, then it returns a partial function (or curried function) that will take the second parameter and return you the decrypted plaintext.
+
+We can use `:t` in ghci to check the type of the function and the partial function:
+
+```
+ghci> :t decryptMsgECB
+decryptMsgECB :: AES256 -> ByteString -> ByteString
+
+ghci> :t decryptMsgECB s
+decryptMsgECB s :: ByteString -> ByteString
+
+ghci> :t decryptMsgECB s "cipher"
+decryptMsgECB s "cipher" :: ByteString
+```
+
+This is a language feature called [Currying](https://wiki.haskell.org/Currying). In Haskell, every function is auto-curried, meaning if a function receives not enough parameters, it will return another function that takes the remaining parameters and return you the result.
+
+## Message size
+OK. Back to the topic. Let's try with a different message:
+
+```
+ghci> encryptMsgECB s "this is my secret"
+"*** Exception: Encryption error: input length must be a multiple of block size (16). Its length is: 17
+CallStack (from HasCallStack):
+  error, called at ./Crypto/Cipher/AES/Primitive.hs:298:22 in cryptonite-0.24-3fvWA2h8jkgHY8jjamZHms:Crypto.Cipher.AES.Primitive
+```
+
+Oops, we got a exception.
+
+The reason is that the message length was wrong. Since AES algorithems will break the message into blocks in order to encrypt it using the secret key, the message length must be a multiple of block size.
+
+`"this is a secret"` has 16 characters, it worked. But `"this is my secret" has 17 characters, which is not a multiple of 16, so didn't work.
+
+But then how to encrypt messages that are not a multiple of block size in length?
+
+That's the technique called [Padding](https://en.wikipedia.org/wiki/Padding_(cryptography)#Block_cipher_mode_of_operation), we need to pad the message in order to fit the block size. For example, adding spaces to the end of the message until it's 32 in length.
+
+The library doesn't make the decision of how to pad the message, instead, it just implements the algrithm, sets the criteria and leaves the decision of padding up to the user. In fact, ECB mode is not secure, because it's vulnerable to [Padding oracle attach](https://en.wikipedia.org/wiki/Padding_oracle_attack). Choosing the right mode is very important for being secure.
+
+In the next blog post, I will be talking about a different AES mode which is more practical and secure than ECB mode.
+
+## Verify that Hacker can't decrypt with a different key
+OK. So far, we are able to encrypt a message that is a multiple of 16 in length, and decrypt it back to the original plaintext. But we haven't checked if it's secure. By secure, I mean, at least a hacker shouldn't be able to decrypt the ciphertext with a different secret key.
+
+Let's try by making a hacker's key and use that to try decrypting our message
+```
+ghci> Right hackerSecretKey = makeSecretKey "111-222-333-444-555-666-777-888-"
+
+ghci> decryptMsgECB hackerSecretKey $ encryptMsgECB s "this is a secret"
+"\193\&8\252`k\186=\236\a\254n\165\139\158Q\RS"
+```
+
+As we see, when hacker is using a different key than the key used to encrypt the message, the returned message is completely different than the original message.
+
+## Summary
+In this blog post, I introduced one of the Symmetric key encryption algorithem - the AES256.
+
+We chose the Haskell library - cryptonite and implemented a few functions to create secret key, encrypt and decrypt messages.
+
+The block cipher mode we used is ECB mode, the simpliest mode.
+
+Along the way we also introduced some basic Haskell syntax, and language features. And how to use GHCi as a REPL to quickly test and experiment the functions that we implemented.
+
+All the source code can be found here.
+
+The next blog post, I will be talk about a different block cipher mode for AES algorithem, called CTR mode. This mode is a more practical and secure mode that can be used in real world cases.
