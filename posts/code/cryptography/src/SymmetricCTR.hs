@@ -36,7 +36,17 @@ testCTREncryption = do
   print "Can encrypt plain text into cipher text with IV and secret in CTR mode:"
   print $ encryptMsgCTR sKey (makeIVFromInt 100) "this is a secret"
 
-  print "Can decrypt back to original plain text"
+  print "Can decrypt back to the original plain text"
   print $ decryptMsgCTR sKey (makeIVFromInt 100) $ encryptMsgCTR sKey (makeIVFromInt 100) "this is a secret"
+
+  print "Can decrypt back to the original plain text in any length"
+  print $ decryptMsgCTR sKey (makeIVFromInt 100) $ encryptMsgCTR sKey (makeIVFromInt 100) "hello world"
+
+  print "Can't decrypt back to the original plain text with a wrong IV"
+  print $ decryptMsgCTR sKey (makeIVFromInt 101) $ encryptMsgCTR sKey (makeIVFromInt 100) "this is a secret"
+
+  let Right hackerSecretKey = makeSecretKey "111-222-333-444-555-666-777-888-"
+  print "Can't decrypt back to the original plain text with a wrong key"
+  print $ decryptMsgCTR hackerSecretKey (makeIVFromInt 100) $ encryptMsgCTR sKey (makeIVFromInt 100) "this is a secret"
 
   print "done"
