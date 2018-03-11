@@ -7,14 +7,14 @@ tags: haskell, cryptography, aes
 ## Introduction
 Symmetric key algorithms use the same cryptographic key for both encryption of plaintext and decryption of ciphertext.
 
-ciphertext are bit sequences, which have no meaning.
+Ciphertexts are bit sequences, which have no meaning.
 
 Without the secret key, ciphertext cannot be converted back to the original plaintext.
 
-Most popular Symmetric-key algorithms include: AES, Blowfish, ChaCha, etc
+The most popular Symmetric-key algorithms include: AES, Blowfish, ChaCha, etc
 
 ## Haskell implementations
-Haskell community has an awesome library [`cryptonite`](https://hackage.haskell.org/package/cryptonite) that provides implementations for the popular cryptographic algorithms.
+Haskell community has an awesome library [`cryptonite`](https://hackage.haskell.org/package/cryptonite) that provides implementations for popular cryptographic algorithms.
 
 For Symmetric-key algorithms, they are all grouped under the namespace [`Crypto.Cipher`](https://hackage.haskell.org/package/cryptonite#modules). Let's get started with AES256 and see how it works in Haskell.
 
@@ -22,11 +22,11 @@ For Symmetric-key algorithms, they are all grouped under the namespace [`Crypto.
 
 AES algorithm has different modes for encrypting/decrypting messages. I'd like to start with ECB mode (Electronic CodeBook mode).
 
-Although ECB mode is not very secure, it is simplest one, so it's easy to explain and give you a taste of how it works overall.
+Although ECB mode is not very secure, it is the simplest one, so it's easy to explain and give you a taste of how it works overall.
 
-Alright, first, let's create a secret.
+Alright, first, let's create a secret string.
 
-A secret is a random string that is used to encrypt plaintext into ciphertext.
+A secret string is a random string that is used to encrypt plaintext into ciphertext.
 
 ```hasekll
 {-# LANGUAGE OverloadedStrings #-}
@@ -34,18 +34,18 @@ A secret is a random string that is used to encrypt plaintext into ciphertext.
 import Data.ByteString (ByteString)
 
 secret :: ByteString
-secret = "0123-4567-890A-BCDE"
+secret = "012-456-89A-CDE-012-456-89A-CDE-"
 ```
 
-The above code defines a ByteString `secret` with the value `"0123-4567-890A-BCDE"`, which is a 16 length long characters. The length is important, as I will talk about it later.
+The above code defines a ByteString `secret` with the value `"012-456-89A-CDE-012-456-89A-CDE-"`, which is 32-character long (256 bits) string. The length is important, and I will talk about it later.
 
-`import Data.ByteString (ByteString)` is to tell Haskell where the type `ByteString` is defined. `(ByteString)` means import only the type definition from the module.
+`import Data.ByteString (ByteString)` is to tell Haskell complier where the type `ByteString` is defined. `(ByteString)` means import only the type definition from the module.
 
 What does `{-# LANGUAGE OverloadedStrings #-}` do?
 
-It's called language extension, that enables Haskell compiler to understand certain syntax. In this case, `OverloadedStrings` language extension is enabled to be able to create a ByteString value with double quotes, like this `"0123-4567-890A-BCDE"`. This language extension is probably the most common one that you would like to turn on.
+It's called language extension, which enables Haskell compiler to understand certain syntax. In this case, `OverloadedStrings` language extension is enabled to create a ByteString value with double quotes, like this `"0123-4567-890A-BCDE"`. This language extension is probably the most common one that you would like to turn on.
 
-Alright, let's try it out! Haskell provides a very powerful [REPL](https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop), called GHCi that allows experimenting with the code.
+Now, let's try it out! Haskell provides a very powerful [REPL](https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop), called GHCi that allows experiment with the code.
 
 To start `ghci`, we use `stack ghci`. Wait, what is `stack` then? Well, it's not important for this post.
 
@@ -55,7 +55,7 @@ ghci> :load src/Symmetric.hs
 [1 of 1] Compiling Symmetric        ( src/Symmetric.hs, interpreted )
 Ok, one module loaded.
 ghci> secret
-"0123-4567-890A-BCDE"
+"012-456-89A-CDE-012-456-89A-CDE-"
 ```
 
 We can see `Symmetric.hs` is correctly being compiled. And `secretKey` prints the correct string we defined.
@@ -63,7 +63,7 @@ We can see `Symmetric.hs` is correctly being compiled. And `secretKey` prints th
 ## Make SecretKey
 A ByteString secret is not a secret key yet, we need to turn the secret string into a secret key. However, not every string can be converted into a secret key.
 
-If the input string is not convertible, then we should get an error. And if convertible, then we will get an AES256 value, which means we will get either an error or an AES256 value. And the function definition is just like this:
+If the input string is not convertible, then we will get an error. And if convertible, then we will get an AES256 value, which means we will get either an error or an AES256 value. And the function definition is just like this:
 
 ```haskell
 makeSecretKey :: ByteString -> Either CryptoError AES256
@@ -81,9 +81,9 @@ ghci> makeSecretKey secret
     • In a stmt of an interactive GHCi command: print it
 ```
 
-Oops, when we try making a secret key, it returns the above error.
+Oops, when we try to make a secret key, it returns the above error.
 
-This is a very common error, basically says, GHCi doesn't know how to convert the returned type into a string in order to print it.
+This is a very common error, which basically says, GHCi doesn't know how to convert the returned type into a string in order to print it.
 
 Well, seems like the secret key is not printable. That's OK, we can still know if it's successfully converted or not:
 
@@ -122,7 +122,7 @@ import Crypto.Cipher.Types (ecbEncrypt, ecbDecrypt)
 import Crypto.Error (CryptoError(..))
 
 secretKey :: ByteString
-secretKey = "0123-4567-890A-BCDE"
+secretKey = "012-456-89A-CDE-012-456-89A-CDE-"
 
 encryptMsgECB :: AES256 -> ByteString -> ByteString
 encryptMsgECB secKey msg = ecbEncrypt secKey msg
@@ -151,9 +151,9 @@ ghci> decryptMsgECB s $ encryptMsgECB s "this is a secret"
 
 Nice, we encrypted a plaintext into ciphertext, which is completely different than the plaintext. And we decrypted it back to the original plaintext with the same secret key.
 
-But how does the second statement works? What does the `$` (dollar sign) do?
+But how does the second statement work? What does the `$` (dollar sign) do?
 
-`$` in Haskell acts like operators in order to avoid parentheses.
+`$` in Haskell acts as operators in order to avoid parentheses.
 
 So `decryptMsgECB s $ encryptMsgECB s "this is a secret"` will be executed as `decryptMsgECB s (encryptMsgECB s "this is a secret")`. Then, the result of `encryptMsgECB s "this is a secret"` will be passed to `decryptMsgECB s`. And then the result got printed out.
 
@@ -176,7 +176,7 @@ ghci> :t decryptMsgECB s "cipher"
 decryptMsgECB s "cipher" :: ByteString
 ```
 
-This is a language feature called [Currying](https://wiki.haskell.org/Currying). In Haskell, every function is auto-curried, meaning if a function receives not enough parameters, it will return another function that takes the remaining parameters and returns you the result.
+This is a language feature called [Currying](https://wiki.haskell.org/Currying). In Haskell, every function is auto-curried, meaning if a function doesn't receive enough parameters, it will return another function that takes the remaining parameters and returns you the result.
 
 ## Message size
 OK. Back to the topic. Let's try with a different message:
@@ -190,20 +190,18 @@ CallStack (from HasCallStack):
 
 Oops, we got an exception.
 
-The reason is that the message length was wrong. Since AES algorithms will break the message into blocks in order to encrypt it using the secret key, the message length must be a multiple of block size.
+The reason is that the message length was wrong. Since AES algorithms will break the message into blocks in order to encrypt it using the secret key, the message length must be a multiple of the block size.
 
-`"this is a secret"` has 16 characters, it worked. But `"this is my secret" has 17 characters, which is not a multiple of 16, so didn't work.
+The block size for AES256 is 16. `"this is a secret"` has 16 characters, it worked. But `"this is my secret" has 17 characters, which is not a multiple of 16, so it didn't work.
 
-But then how to encrypt messages that are not a multiple of block size in length?
+But then how to encrypt messages that are not a multiple of the block size in length?
 
-That's the technique called [Padding](https://en.wikipedia.org/wiki/Padding_(cryptography)#Block_cipher_mode_of_operation), we need to pad the message in order to fit the block size. For example, adding spaces to the end of the message until it's 32 in length.
+We will need the technique called [Padding](https://en.wikipedia.org/wiki/Padding_(cryptography)#Block_cipher_mode_of_operation). We need to pad the message in order to fit the block size. For example, adding spaces to the end of the message until it's 32 in length.
 
 The library doesn't make the decision of how to pad the message, instead, it just implements the algorithm, sets the criteria and leaves the decision of padding up to the user. In fact, ECB mode is not secure, because it's vulnerable to [Padding oracle attach](https://en.wikipedia.org/wiki/Padding_oracle_attack). Choosing the right mode is very important for being secure.
 
-In the next blog post, I will be talking about a different AES mode which is more practical and secure than ECB mode.
-
 ## Verify that Hacker can't decrypt with a different key
-OK. So far, we are able to encrypt a message that is a multiple of 16 in length and decrypt it back to the original plaintext. But we haven't checked if it's secure. By secure, I mean, at least a hacker shouldn't be able to decrypt the ciphertext with a different secret key.
+OK. So far, we are able to encrypt a message that is a multiple of 16 in length and decrypt it back to the original plaintext. But we haven't checked if it's secure. By "secure", I mean, at least a hacker shouldn't be able to decrypt the ciphertext with a different secret key.
 
 Let's try by making a hacker's key and use that to try decrypting our message
 ```
@@ -218,12 +216,12 @@ As we see, when a hacker is using a different key than the key used to encrypt t
 ## Summary
 In this blog post, I introduced one of the Symmetric key encryption algorithm - the AES256.
 
-We chose the Haskell library - cryptonite and implemented a few functions to create a secret key, encrypt and decrypt messages.
+We chose the Haskell library - cryptonite, and implemented a few functions to create a secret key, encrypt and decrypt messages.
 
-The block cipher mode we used is ECB mode, the simplest mode.
+The block cipher mode we used for AES is ECB mode, which is the simplest mode.
 
-Along the way, we also introduced some basic Haskell syntax and language features. And how to use GHCi as a REPL to quickly test and experiment the functions that we implemented.
+Along the way, we also introduced some basic Haskell syntax and language features, and how to use GHCi as a REPL to quickly test and experiment the functions that we implemented.
 
 All the source code can be found here.
 
-The next blog post, I will be talking about a different block cipher mode for AES algorithm, called CTR mode. This mode is a more practical and secure mode that can be used in real-world cases.
+In the next blog post, I will be talking about a different block cipher mode for AES algorithm, called CTR mode. This mode is a more practical and secure mode that can be used in real-world cases.
