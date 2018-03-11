@@ -18,5 +18,3 @@ encryptMsgECB = ecbEncrypt
 
 decryptMsgECB :: AES256 -> ByteString -> ByteString
 decryptMsgECB secKey msg = ecbDecrypt secKey msg
-
-
