@@ -148,11 +148,42 @@ messageHashSHA256 :: ByteString -> Digest SHA256
 messageHashSHA256 = hash
 ```
 
-Since `ByteString` is an instance of `ByteArrayAccess` typeclass and `SHA256` is an instance of typeclass `HashAlgorithm`, the generic `hash` function then is able to use their implementations of `ByteArrayAccess` and `HashAlgorithm` typeclasses (interfaces) to compute the hash value (digest).
+Since `ByteString` is an instance of `ByteArrayAccess` typeclass and `SHA256` is an instance of typeclass `HashAlgorithm`, then the generic `hash` function is able to use their implementations of `ByteArrayAccess` and `HashAlgorithm` typeclasses (interfaces) to compute the hash value (digest).
 
 This is how polymorphism works in Haskell.
+
+## Static type check
+
+Haskell allows polymorphism through typeclass. We've seen the example that the generic `hash` function can take different types value and compute its hash value.
+
+One might argue that the similar polymorphism can be also implemented in languages like Javascript or Python. What sets Haskell apart is that its advanced type system is able to run the static type check and find the type error at compile time.
+
+Let's take the above `messageHashSHA256` function as an example. So if let it take `Int` as parameter instead of `ByteString`,
+
+```haskell
+messageHashSHA256 :: Int -> Digest SHA256
+messageHashSHA256 = hash
+```
+
+Let's see what would happen:
+
+```
+stack ghci src/OneWayHashFunction.hs
+
+/Users/leo/zhangchiqing/blog/posts/code/cryptography/src/OneWayHashFunction.hs:9:21: error:
+    • No instance for (memory-0.14.11:Data.ByteArray.Types.ByteArrayAccess
+                         Int)
+        arising from a use of ‘hash’
+    • In the expression: hash
+      In an equation for ‘messageHashSHA256’: messageHashSHA256 = hash
+  |
+9 | messageHashSHA256 = hash
+  |                     ^^^^
+```
+
+The error says `Int` is not an instance of typeclass `ByteArrayAccess`, which is required by the `hash` function. Because of such error, the problem won't compile.
 
 ## Summary
 In this blog post, we introduced what is one-way hash function, and how it works. We used the Haskell library cryptonite to implement a function that computes a SHA256 digest of a given message, and also introduced how polymorphism works in Haskell by comparing the implementation of two different hash functions.
 
-In the next blog post, I will be talking about Asymmetric key encryption, and how to implement it in Haskell.
+In the next blog post, I will be talking about Asymmetric key encryption, and how to use it in Haskell.
