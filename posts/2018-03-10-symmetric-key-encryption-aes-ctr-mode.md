@@ -5,7 +5,7 @@ tags: haskell, cryptography, aes
 ---
 
 ## Introduction
-In the last blog post, we introduced symmetric key encryption and an AES256 implementation in Haskell. We introduced the block cipher mode - ECB mode. In this blog post, I'm going to talk about a more practical and secure mode - CTR mode (Counter mode).
+In the last blog post, we introduced symmetric key encryption and how to use one of the implementations - AES256 in Haskell. We introduced the block cipher mode - ECB mode. In this blog post, I'm going to talk about a more practical and secure mode - CTR mode (Counter mode).
 
 And also I will be talking about how to use `IO` in Haskell, and more useful commands for GHCi.
 
@@ -33,7 +33,7 @@ Now if Mallory somehow receives both the ciphertext and the IV, since she doesn'
 If Mallory sends Bob the ciphertext with a different IV, since the IV is not the same IV that ciphertext was encrypted with, then the cipher can't be decrypted, therefore Bob can just treat the ciphertext as a malformated message.
 
 ## Creating initialization vector (IV)
-Let's see how to implement the AES CTR mode in Haskell.
+Let's see how to use the AES CTR mode in Haskell.
 
 First, we need to create an IV. `cryptonite` provides three functions for making IV: `makeIV`, `ivAdd` and `nullIV`.
 
