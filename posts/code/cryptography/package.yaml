@@ -23,6 +23,7 @@ dependencies:
 - base >= 4.7 && < 5
 - cryptonite
 - bytestring
+- memory
 
 library:
   source-dirs: src
