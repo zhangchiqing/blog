@@ -14,7 +14,8 @@ Let's get started.
 ## CTR Mode
 For ECB mode, we can observe that the ciphertext is only determined by the secret key and plaintext.
 
-<picture for ECB mode>
+![image](https://user-images.githubusercontent.com/811374/37324103-c58fd1ca-2644-11e8-87fd-fc6dacb5bcca.png)
+([picture source](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation))
 
 So ECB would be vulnerable for [replay attack](https://en.wikipedia.org/wiki/Replay_attack).
 
@@ -22,7 +23,8 @@ For example, Alice and Bob both have the same secret key, if Alice wants to send
 
 CTR mode changes that. CTR mode turns a block cipher into a stream cipher. In addition to a secret key, CTR mode also asks for an initialization vector (IV) which is basically a random nonce to encrypt plaintext.
 
-<picture for CTR mode>
+![image](https://user-images.githubusercontent.com/811374/37324135-f21eac7a-2644-11e8-8fab-69e61380f28a.png)
+([picture source](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation))
 
 Let's see how the initialization vector helps to prevent the replay attack. Let's use the example of Alice, Bob, and Mallory again:
 

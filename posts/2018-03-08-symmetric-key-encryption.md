@@ -222,6 +222,6 @@ The block cipher mode we used for AES is ECB mode, which is the simplest mode.
 
 Along the way, we also introduced some basic Haskell syntax and language features, and how to use GHCi as a REPL to quickly test and experiment the functions that we implemented.
 
-All the source code can be found here.
+All the source code can be found [here](https://github.com/zhangchiqing/blog/tree/master/code/cryptography/src/Symmetric.hs).
 
 In the next blog post, I will be talking about a different block cipher mode for AES algorithm, called CTR mode. This mode is a more practical and secure mode that can be used in real-world cases.
