@@ -47,7 +47,7 @@ It's called language extension, which enables Haskell compiler to understand cer
 
 Now, let's try it out! Haskell provides a very powerful [REPL](https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop), called GHCi that allows experiment with the code.
 
-To start `ghci`, we use `stack ghci`. Wait, what is `stack` then? Well, it's not important for this post.
+To start `ghci`, we use `stack ghci`. Wait, what is `stack` then? It's [The Haskell Tool Stack](https://docs.haskellstack.org/en/stable/README/). It should be installed with [the Haskell Platform](https://www.haskell.org/platform/).
 
 ```
 stack ghci
