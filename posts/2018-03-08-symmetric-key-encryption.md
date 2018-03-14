@@ -26,7 +26,22 @@ Although ECB mode is not very secure, it is the simplest one, so it's easy to ex
 
 Alright, first, let's create a secret string.
 
-A secret string is a random string that is used to encrypt plaintext into ciphertext.
+A secret string is a random string that is used to encrypt plaintext into ciphertext and decrypt the ciphertext back to the original plaintext.
+
+```
+               secret key
+                   |
+                   v
+ plaintext ---> encrypt ---> ciphertext
+
+
+               secret key
+                   |
+                   v
+ plaintext <--- decrypt <--- ciphertext
+```
+
+This is how to create a secret string in Haskell:
 
 ```hasekll
 {-# LANGUAGE OverloadedStrings #-}
