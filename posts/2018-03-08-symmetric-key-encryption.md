@@ -43,7 +43,7 @@ A secret string is a random string that is used to encrypt plaintext into cipher
 
 This is how to create a secret string in Haskell:
 
-```hasekll
+```haskell
 {-# LANGUAGE OverloadedStrings #-}
 
 import Data.ByteString (ByteString)
