@@ -17,22 +17,22 @@ For ECB mode, we can observe that the ciphertext is only determined by the secre
 ![image](https://user-images.githubusercontent.com/811374/37324103-c58fd1ca-2644-11e8-87fd-fc6dacb5bcca.png)
 ([picture source](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation))
 
-So ECB would be vulnerable for [replay attack](https://en.wikipedia.org/wiki/Replay_attack).
+ECB is vulnerable for [replay attack](https://en.wikipedia.org/wiki/Replay_attack).
 
-For example, Alice and Bob both have the same secret key, if Alice wants to send a message Bob, saying "send $100 from Alice's account to Bob's account". Alice can encrypt the message with the shared secret key, and sent the ciphertext to Bob. But if a hacker Mallory intercepted the ciphertext, even though she doesn't know what's the plaintext, she can still mass up by sending the same ciphertext to Bob twice (replay). Then, since Bob receives two exactly same messages, and they all can be decrypted correctly with his secret key, then he would think Alice sent $200 to him in total.
+For example, Alice and Bob both have the same secret key. If Alice wants to send a message Bob, for instance "send $100 from Alice's account to Bob's account". Alice can encrypt the message with the shared secret key, and send the ciphertext to Bob. But if a hacker Mallory intercepted the ciphertext, even though she doesn't know what the plaintext is, she can still mass up by sending the same ciphertext to Bob twice (replay attack). Then, since Bob receives two exactly same messages, and they all can be decrypted correctly with his secret key, then he would think Alice sent $200 to him in total.
 
-CTR mode changes that. CTR mode turns a block cipher into a stream cipher. In addition to a secret key, CTR mode also asks for an initialization vector (IV) which is basically a random nonce to encrypt plaintext.
+CTR mode is not vulnerable for replay attack. CTR mode turns a block cipher into a stream cipher. In addition to a secret key, CTR mode also asks for an initialization vector (IV) which is basically a random nonce to encrypt plaintext.
 
 ![image](https://user-images.githubusercontent.com/811374/37324135-f21eac7a-2644-11e8-8fab-69e61380f28a.png)
 ([picture source](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation))
 
 Let's see how the initialization vector helps to prevent the replay attack. Let's use the example of Alice, Bob, and Mallory again:
 
-Alice and Bob both have the same secret key, if Alice wants to send a message Bob, saying "send $100 from Alice's account to Bob's account". Alice first creates a new random IV, then encrypt the message with the secret key and the IV. Then Alice sends the ciphertext along with the IV to Bob. With the IV and the secret key, Bob can decrypt the ciphertext back to the plaintext.
+Alice and Bob both have the same secret key, if Alice wants to send a message to Bob: "send $100 from Alice's account to Bob's account". Alice first creates a new random IV, then encrypt the message with the secret key and the IV. Then Alice sends the ciphertext along with the IV to Bob. With the IV and the secret key, Bob can decrypt the ciphertext back to the plaintext.
 
-Now if Mallory somehow receives both the ciphertext and the IV, since she doesn't have the secret key, she can't decrypt the message. And if she sends the ciphertext again to Bob to do replay attack. Bob will reject the second message because the IV is the same, Alice and Bob have the agreement that everything they send each other a message, the IV has to be different.
+Now if Mallory somehow intercepted both the ciphertext and the IV, since she doesn't have the secret key, she can't decrypt the message. And if she sends the ciphertext again to Bob for replay attack. Bob will reject the second message because the IV he has seen before. Alice and Bob have the agreement that everytime they send each other a message, the IV has to be different.
 
-If Mallory sends Bob the ciphertext with a different IV, since the IV is not the same IV that ciphertext was encrypted with, then the cipher can't be decrypted, therefore Bob can just treat the ciphertext as a malformated message.
+If Mallory sends Bob the ciphertext with a different IV, since the IV is not the same IV that ciphertext was encrypted with, then the cipher can't be decrypted, therefore Bob can just treat the ciphertext as a malformated message, and ignores it.
 
 ## Creating initialization vector (IV)
 Let's see how to use the AES CTR mode in Haskell.
@@ -149,7 +149,7 @@ decryptMsgCTR :: AES256 -> IV AES256 -> ByteString -> ByteString
 decryptMsgCTR key iv plaintext = ctrCombine key iv plaintext
 ```
 
-The encryption and decryption are the same! Yes, Symmetric key encryption algorithm uses the same key to encrypt and decrypt. In CTR mode, we decrypt the message by encrypting the message with the same key and iv again.
+The encryption and decryption are the same! Yes, Symmetric key encryption algorithm uses the same key to encrypt and decrypt message. In CTR mode, we decrypt the message by encrypting the message with the same key and iv again.
 
 For the secret key creation, we can refer to the previous blog post, and reuse the function `makeSecretKey` and `secret`.
 
@@ -207,7 +207,7 @@ encryptMsgCTR :: AES256 -> IV AES256 -> ByteString -> ByteString
 encryptMsgCTR = ctrCombine
 ```
 
-We end up having a very concise function implementation. And it still works exactly as before. This style called [point-free style](https://wiki.haskell.org/Pointfree)
+We end up having a very concise function implementation. And it still works exactly as before. This style is called [point-free style](https://wiki.haskell.org/Pointfree)
 
 ## Use IO Monad to print result
 So far, all the functions we defined are all pure functions. Pure functions are functions that have no side effect. If we pass the same parameters to pure functions, they always return the same result.
@@ -237,6 +237,8 @@ testCTREncryption = do
 
 The `do` notation declares that each of the following lines will return an IO Monad which does some side effect. The `print` function takes a value that can be converted into String and returns an IO Monad which prints the String as the side effect. And return value of the last statement `print "done"` will be the return value of the function `testCTREncryption` which is `IO ()`
 
+Haskell groups expressions by indentation. The function body of `testCTREncryption` starts from `do` all the way to `print "done"` because they have the same indentation.
+
 Note that there is one statement starts with `let`. `let` defines a scoped variable that only this function has access to, pretty much like the `let` keyword in Javascript.
 
 ```haskell
@@ -261,7 +263,7 @@ ghci> testCTREncryption
 ```
 
 ## Verify property
-Now we can encrypt and decrypt messages in CTR mode. We also need to verify that if either the IV or the secret key is different than the one used for encryption, the ciphertext can't be decrypted.
+Now we can encrypt and decrypt messages in CTR mode. We also need to verify that if either the IV or the secret key is different from the one used for encryption, then the ciphertext can't be decrypted.
 
 Let's add more checks in the `testCTREncryption` function:
 
