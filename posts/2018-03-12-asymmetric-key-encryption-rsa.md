@@ -12,7 +12,7 @@ Asymmetric key encryption mitigates that challenge by allowing to use different 
 
 The key to encrypt the plaintext is called public key, which is safe to be shared. And the key to decrypt the ciphertext is called private key, which needs to keep private so that only the key holder can decrypt the ciphertext. Therefore, asymmetric encryption is also known as public key encryption.
 
-In this blog post, we are gonna talk about how it works and how to use it in a Haskell to encrypt and decrypt messages. And we will also explain some Haskell syntax, like `<-` and pattern matching.
+In this blog post, we are gonna talk about how it works and how to use it in a Haskell to encrypt and decrypt messages. And we will also explain some Haskell syntax, like `<-`, pattern matching, and `::` for tyep casting.
 
 ## RSA
 RSA is one of the most popular asymmetric key encryption algorithms. It’s based on the assumption that it’s very difficult to factor a very large number.
