@@ -232,7 +232,7 @@ encryptMsgRSA :: Seed -> PublicKey -> ByteString -> Either Error ByteString
 encryptMsgRSA seed pKey message = encryptWithSeed seed (defaultOAEPParams SHA256) pKey message
 ```
 
-As we introduced point-free style last time, we omit `pKey message` on both sides.
+As we introduced point-free style last time, we can omit `pKey message` on both sides.
 
 ```haskell
 encryptMsgRSA :: Seed -> PublicKey -> ByteString -> Either Error ByteString
