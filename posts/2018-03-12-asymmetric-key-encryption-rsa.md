@@ -207,7 +207,7 @@ defaultOAEPParams SHA256 :: OAEPParams SHA256 ByteString ByteString
   :: OAEPParams SHA256 ByteString ByteString
 ```
 
-### `::` annotation
+### `::` type casting
 `::` here is to cast the type. Since `ByteString` are type instance of typeclass `ByteArrayAccess` and `ByteArray`, we can use `::` to cast the type of `defaultOAEPParams SHA256` to be a concrete type instance which is `OAEPParams SHA256 ByteString ByteString`
 
 If we try to cast into a incompatible type, it will error out:
