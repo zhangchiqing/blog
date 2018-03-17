@@ -208,9 +208,11 @@ defaultOAEPParams SHA256 :: OAEPParams SHA256 ByteString ByteString
 ```
 
 ### `::` type casting
-`::` here is to cast the type. Since `ByteString` are type instance of typeclass `ByteArrayAccess` and `ByteArray`, we can use `::` to cast the type of `defaultOAEPParams SHA256` to be a concrete type instance which is `OAEPParams SHA256 ByteString ByteString`
+The `::` in `defaultOAEPParams SHA256 :: OAEPParams SHA256 ByteString ByteString` is to cast the type.
 
-If we try to cast into a incompatible type, it will error out:
+Since `ByteString` are type instance of typeclass `ByteArrayAccess` and `ByteArray`, we can use `::` to cast the type of `defaultOAEPParams SHA256` to be a concrete type instance which is `OAEPParams SHA256 ByteString ByteString`
+
+If we try to cast into an incompatible type, GHCi will show the following error:
 
 ```
 ghci> :t defaultOAEPParams SHA256 :: OAEPParams SHA256 ByteString Int
