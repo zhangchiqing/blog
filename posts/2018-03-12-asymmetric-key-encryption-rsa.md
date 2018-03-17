@@ -41,17 +41,17 @@ The following diagram shows computation process:
 
 
 ```
-                           public key (e, n)
-                                     |
-                                    v
+                 public key (e, n)
+                        |
+                        v
    plaintext -----> RSA encrypt -----> ciphertext
-                       (c = m ^ e mod n)
+                (c = m ^ e mod n)
 
-                           private key (d, n)
-                                     |
-                                    v
+                private key (d, n)
+                        |
+                        v
    plaintext <----- RSA decrypt <----- ciphertext
-                       (m = c ^ d mod n)
+                (m = c ^ d mod n)
 
 ```
 
