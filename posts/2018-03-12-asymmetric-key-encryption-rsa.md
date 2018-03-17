@@ -14,7 +14,6 @@ The key to encrypt the plaintext is called public key, which is safe to be share
 
 In this blog post, we are gonna talk about how it works and how to use it in a Haskell to encrypt and decrypt messages. And we will also explain some Haskell syntax, like `<-` and pattern matching.
 
-
 ## RSA
 RSA is one of the most popular asymmetric key encryption algorithms. It’s based on the assumption that it’s very difficult to factor a very large number.
 
@@ -56,7 +55,6 @@ The following diagram shows computation process:
 ```
 
 ## Make key pair
-
 Alright, enough theory, let’s see how to use RSA in Haskell.
 
 First, Let’s make a key pair.
@@ -65,7 +63,6 @@ A key pair consists of a public key and private key.
 
 ```haskell
 module Asymmetric where
-
 
 import Crypto.PubKey.RSA.Types (PublicKey, PrivateKey, Error(..))
 import Crypto.PubKey.RSA (generate)
@@ -158,15 +155,96 @@ Yes, that’s the pattern matching. Since the type signature of `makeKeyPair` is
 Printing both of them out as a pair with `(  ,  )` would show us the pair of keys.
 
 ## Encryption and decryption in point-free style
-The encryption function here is written in point-free style. The `encryptWithSeed` function takes seed, parameters, public key and the message, and return an Either type that either returns an error or the ciphertext.
+### How to use RSA to encrypt the message?
 
-`defaultOAEPParams SHA256` is to specify how to pad the message in order to encrypt a message in any size.
+Let's take a look at the function that cryptonite provides. cryptonite provides two functions for encrypting message: [`encrypt`](https://hackage.haskell.org/package/cryptonite-0.25/docs/Crypto-PubKey-RSA-OAEP.html#v:encrypt) and [`encryptWithSeed`](https://hackage.haskell.org/package/cryptonite-0.25/docs/Crypto-PubKey-RSA-OAEP.html#v:encryptWithSeed). Since we've created seed, let's use the `encryptWithSeed` function.
+
+```haskell
+encryptWithSeed
+    :: HashAlgorithm hash
+    => ByteString                               -- Seed
+    -> OAEPParams hash ByteString ByteString    -- OAEP params to use for encryption
+    -> PublicKey                                -- Public key.
+    -> ByteString                               -- Message to encrypt
+    -> Either Error ByteString
+```
+
+The type signature of `encryptWithSeed` asks for a few arguments, other than seed and public key, which we already have, it also asks for an `OAEP` parameter. `OAEP` stands for Optimal Asymmetric Encryption Padding. Basically, it uses padding algorithm to encrypt a message in any length.
+
+### Now the question is: How to create a variable that has type `OAEPParams hash ByteString ByteString`?
+
+Clicking on the `OAEPParams` link on the hackage document, we found there is a constructor function [`defaultOAEPParams`](https://hackage.haskell.org/package/cryptonite-0.25/docs/Crypto-PubKey-RSA-OAEP.html#t:OAEPParams) that returns `OAEPParams` type.
+
+```haskell
+defaultOAEPParams :: (ByteArrayAccess seed, ByteArray output, HashAlgorithm hash) => hash -> OAEPParams hash seed output
+```
+
+The `defaultOAEPParams` function takes a generic type `hash`, on the left-hand side of `=>`, it restricts `hash` to be any type instance of typeclass `HashAlgorithm`, we learned how to use hash function like `SHA256`, `SHA512` in [the previous blog post](https://github.com/zhangchiqing/blog/blob/master/posts/2018-03-11-one-way-hash-function.md).
+
+What is the type `OAEPParams hash seed output`? `seed` and `output` are also typeclasses, meaning they are generic type, it's up to us to choose what type we need, as long as they are an instance of its tyepclass.
+
+We can use `:t` to show the type of certain function or expression in GHCi:
+
+```
+stack ghci src/Asymmetric.hs
+ghci> import Crypto.PubKey.RSA.OAEP
+ghci> :t defaultOAEPParams
+defaultOAEPParams
+  :: (memory-0.14.11:Data.ByteArray.Types.ByteArrayAccess seed,
+      HashAlgorithm hash,
+      memory-0.14.11:Data.ByteArray.Types.ByteArray output) =>
+     hash -> OAEPParams hash seed output
+
+ghci> import Crypto.Hash.Algorithms
+ghci> :t defaultOAEPParams SHA256
+defaultOAEPParams SHA256
+  :: (memory-0.14.11:Data.ByteArray.Types.ByteArrayAccess seed,
+      memory-0.14.11:Data.ByteArray.Types.ByteArray output) =>
+     Crypto.PubKey.RSA.OAEP.OAEPParams SHA256 seed output
+
+ghci> :t defaultOAEPParams SHA256 :: OAEPParams SHA256 ByteString ByteString
+defaultOAEPParams SHA256 :: OAEPParams SHA256 ByteString ByteString
+  :: OAEPParams SHA256 ByteString ByteString
+```
+
+### `::` annotation
+`::` here is to cast the type. Since `ByteString` are type instance of typeclass `ByteArrayAccess` and `ByteArray`, we can use `::` to cast the type of `defaultOAEPParams SHA256` to be a concrete type instance which is `OAEPParams SHA256 ByteString ByteString`
+
+If we try to cast into a incompatible type, it will error out:
+
+```
+ghci> :t defaultOAEPParams SHA256 :: OAEPParams SHA256 ByteString Int
+error:
+    • No instance for (memory-0.14.11:Data.ByteArray.Types.ByteArray
+                         Int)
+        arising from a use of ‘defaultOAEPParams’
+    • In the expression:
+          defaultOAEPParams SHA256 :: OAEPParams SHA256 ByteString Int
+```
+
+### Combine with the encryptWithSeed function
+Now we have all the inputs required for `encryptWithSeed`, let's make an `encryptMsgRSA` function that takes a seed, a public key, and a message and then use RSA algorithm to encrypt the message into a ciphertext.
+
+```haskell
+encryptMsgRSA :: Seed -> PublicKey -> ByteString -> Either Error ByteString
+encryptMsgRSA seed pKey message = encryptWithSeed seed (defaultOAEPParams SHA256) pKey message
+```
+
+As we introduced point-free style last time, we omit `pKey message` on both sides.
+
+```haskell
+encryptMsgRSA :: Seed -> PublicKey -> ByteString -> Either Error ByteString
+encryptMsgRSA seed = encryptWithSeed seed (defaultOAEPParams SHA256)
+```
+
+Further, we can use `$` to replace `( )`, and our final `encryptMsgRSA` is like this, it returns an Either type that either returns an error or the ciphertext.
 
 ```haskell
 encryptMsgRSA :: Seed -> PublicKey -> ByteString -> Either Error ByteString
 encryptMsgRSA seed = encryptWithSeed seed $ defaultOAEPParams SHA256
 ```
 
+### Decryption
 Decryption is pretty similar to the encryption. Just that it doesn't require the seed.
 
 ```haskell
