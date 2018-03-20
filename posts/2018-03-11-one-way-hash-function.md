@@ -17,7 +17,7 @@ It has the following properties:
 3. No matter how big the message is, e.g 10 bits, 10 MB, 100 GB, the length of its hash value is always the same.
 4. One way means a hash value can't be converted back to its original message.
 
-With the above properties, one can check if a certain message or file was intercepted or not very fast.
+With the above properties, one can quickly check if a certain message or file was intercepted or not.
 
 For example, Alice is editing a big file, let's say it's 1 GB. Once she's done with the editing, she uploads the file to the server and goes home. The next day, she wants to continue the work from yesterday, so she downloads the 1 GB file from the server. However, before she starts opening that file, she has the question: "Am I working on the same file? Did my file ever get hacked by anyone else?".
 
