@@ -16,7 +16,7 @@ If Alice naively sends the secret key to Bob, then a middleman (Eve) will be abl
 ```
 Alice --- make --> secret key ----------- share to ------------------------> secret key
    |                   |                     |                                   |
-   |                   |                   steel                                 |
+   |                   |                   steal                                 |
    |                   |                     |                                   |
    |                   |                     v                                   |
    |                   |                 secret key                              |
@@ -28,7 +28,7 @@ Alice --- make --> secret key ----------- share to ------------------------> sec
    |                   |                   cipher                                |
    |                   |                     ^                                   |
    |                   |                     |                                   |
-   |                   v                   steel                                 v
+   |                   v                   steal                                 v
    |                encrypt                  |                                decrypt
    ---- message ------------> cipher ---- share to -----> cipher  ---------------------> message --> Bob
 
