@@ -72,19 +72,23 @@ User "Alice"
 "Hello Alice"
 ```
 
-In Haskell, this case is handled by a data type called `Maybe`.
-
-`Maybe User` is a a type can presents two cases that can be "Nothing" or a user.
-
-If the input is a `Maybe User`, then we can make a `checkAndGreet` to take that and returns a `Maybe String`.
+In Haskell, this case is handled by a data type called `Maybe`. This is the type declaration of `Maybe`, which says the generic `Maybe` type is either a `Just` values that contain other values, or a constant `Nothing` value.
 
 ```haskell
-data Maybe a = Nothing | Just a
+data Maybe a = Nothing | Just a deriving (Eq, Ord)
+```
 
+So `Maybe User` is a a type can presents two cases that can be `Nothing` or a `Just User`.
+
+If the input is a `Maybe User`, then we can make a `checkAndGreet` to take that and return a `Maybe String`.
+
+```haskell
 checkAndGreet :: Maybe User -> Maybe String
 checkAndGreet Nothing = Nothing
 checkAndGreet (Just user) = Just (greet user)
 ```
+
+The first line defines the `Maybe`
 
 Let's try it in GHCi
 ```
@@ -94,7 +98,7 @@ Nothing
 > user = User "Alice"
 
 > checkAndGreet (Just user)
-"Hello Alice"
+Just "Hello Alice"
 ```
 
 ## How does it prevent our mistakes
@@ -122,7 +126,7 @@ error:
       In an equation for ‘it’: it = greet "Alice"
 ```
 
-If we remember to validate the name, and now we have a `Maybe User` value, but still we passed it `greet` instead of `checkAndGreet`, then the code won't compile either. Because `Maybe User` and `User` are different types.
+If we remember to validate the name, and now we have a `Maybe User` value, but still we passed it to `greet` instead of `checkAndGreet`, then the code won't compile either. Because `Maybe User` and `User` are different types.
 
 ```
 > greet (Just (User "Alice"))
@@ -279,8 +283,10 @@ Let’s find out.
 
 In Haskell, every function is curried. We can pass a value to a 2-arity function to get a new 1-arity function.
 
+```
 > :t showParents (User “Bob”)
-User -> String
+showParents (User “Bob”) :: User -> String
+```
 
 Therefore, `showParents`'s type signature could also be written as:
 
@@ -292,7 +298,7 @@ if we treat the 1-arity function `(User -> String)` as a value, then `showParent
 
 ```
 > :t mapMaybe showParents (Just (User “Bob”))
-Maybe (User -> String)
+mapMaybe showParents (Just (User “Bob”)) :: Maybe (User -> String)
 ```
 
 But wait for a second, `Maybe` type can contain a function?
@@ -447,9 +453,13 @@ instance Functor Maybe where
   fmap = mapMaybe
 ```
 
-In `Prelude`, `fmap` is also defined as the inflx operator `<$>`. Therefore, the following two operations are identical:
+`fmap` is also defined as the inflx operator `<$>`. Therefore, the following two operations are identical:
 
 ```haskell
+infixl 4 <$>
+(<$>) :: Functor f => (a -> b) -> f a -> f b
+(<$>) = fmap
+
 fmap greet (Just (User "Alice"))
 greet <$> Just (User "Alice")
 ```
@@ -477,12 +487,19 @@ class Applicative Maybe where
   (<*>) = applyMaybe
 ```
 
+With the abstraction of `Functor` and `Applicative`, more generic functions can be built and reused. For example, the `liftA2` and `liftA3` are generic verion of the `map2Maybes` and `map3Maybes` for `Applicative`.
+
+```haskell
+liftA2 :: Applicative f => (a -> b -> c) -> f a -> f b -> f c
+liftA3 :: Applicative f => (a -> b -> c -> d) -> f a -> f b -> f c -> f d
+```
+
+Both of `liftA2` and `liftA3` can be implemented with just `pure` and `<*>`. You can try to implement by yousrself.
+
 ### More Functor example
-With the abstraction of `Functor` and `Applicative`, more generic functions can be built and reused.
+So far we've seen an instance of `Functor` and `Applicative`, which is `Maybe`. Actually, there are a lot more of them defined in the [base module](https://www.stackage.org/haddock/lts-11.12/base-4.10.1.0/Prelude.html#control.i:Functor), and other modules.
 
-So far we've only seen one instance of `Functor` and `Applicative`, which is `Maybe`. Actually, there are a lot more of them defined in the [base module](https://www.stackage.org/haddock/lts-11.12/base-4.10.1.0/Prelude.html#control.i:Functor).
-
-The most useful `Applicative`s (which also means they are `Functor`s) are `Maybe`, `Either`, `IO` and `List`, which means you can use the same functions `fmap`, `(<*>)` on those types.
+The most useful `Applicative`s (which also means they are `Functor`s) are `Maybe`, `Either`, `IO` and `List`, which means you can use the same functions `fmap`, `(<*>)` on all those types.
 
 For instance, `IO` is also a `Functor` and an `Applicative`. And here is an example of how to read and parse environment variables with the functions provided by `Functor` and `Applicative`.
 
@@ -546,4 +563,8 @@ Config {cfgHost = "localhost", cfgPort = 4567, cfgDebug = True, cfgLogLevel = 1}
 ```
 
 ## Summary
-Thanks for reading this blog post through. It's a really long one. Hopefully, I made the functional programming terms `Functor` and `Applicative` a bit earlier to understand.
+`Functor` and `Applicative` are two key concepts in functional programming. We used the `Maybe` type and its use cases as examples to introduce the need of abstraction. `Functor` and `Applicative` are abstractions, they define what functions have to be implement for a type to be an instance of them.
+
+In functional programming, [there are more abstractions and type classes](https://wiki.haskell.org/File:Typeclassopedia-diagram.png) built on top of `Functor` and `Applicative`, this leads to a great amount code and logic to be reusable. And Haskell's strong type system ensures that the use of those generic functions are correct and safe.
+
+Thanks for reading this blog post. Hopefully, I made `Functor` and `Applicative` a bit earlier to understand.
