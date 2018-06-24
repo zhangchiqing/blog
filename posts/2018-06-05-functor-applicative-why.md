@@ -562,7 +562,34 @@ If all the environment variables present, we will get a `Config` value with all 
 Config {cfgHost = "localhost", cfgPort = 4567, cfgDebug = True, cfgLogLevel = 1}
 ```
 
-## Summary
+## Why?
+
+To summarize the points with a few QnAs.
+
+### So what is `Functor` and `Applicative`?
+
+They are typeclasses (like interface in other languages) which defines the functions that their type instances have to implement.
+
+### Why do I need `Functor`?
+
+Because we want to reuse code.
+
+`Functor` generalizes how to map a function over a value to another. We used the `Maybe` type as an example to show why and how to use a generic `mapMaybe` function without having to deal with the empty case. And the `mapMaybe` is the implementation of `Functor` for `Maybe` type.
+
+### Why do I need `Applicative`?
+
+Because `Functor` can only map a function which takes just one argument. If we have a function that takes multiple arguments, we need `Applicative`.
+
+`Applicative` provides abstraction of how to apply a function, which takes multiple arguments, over multiple values. We used `applyMaybe`, which is the implementation of `Applicative` for `Maybe` type, as an example to show how to map a function over multiple `Maybe` values without having to deal with the cases of any of these values being `Nothing`.
+
+### Why do I need `Functor` and `Applicative` instead of just `mapMaybe` and `applyMaybe`?
+
+Because, there are more instances of `Functor` and `Applicative`. For example, `Maybe`, `Either`, `IO`, `List` are all `Functor` and `Applicative`, you can reuse the same `fmap` and `<*>` function to map functions over those values without having to write `mapMaybe`, `mapEither`, `mapList`, etc.
+
+And functions likes [`liftA2`](https://hackage.haskell.org/package/base-4.11.1.0/docs/Control-Applicative.html#v:liftA2), which is defined on top of `Functor` and `Applicative`, can also be reused for free without having to write `may2Maybes`, `map2IOs`, `map2Eithers` etc.
+
+### Conclusion
+
 `Functor` and `Applicative` are two key concepts in functional programming. We used the `Maybe` type and its use cases as examples to introduce the need of abstraction. `Functor` and `Applicative` are abstractions, they define what functions have to be implement for a type to be an instance of them.
 
 In functional programming, [there are more abstractions and type classes](https://wiki.haskell.org/File:Typeclassopedia-diagram.png) built on top of `Functor` and `Applicative`, this leads to a great amount code and logic to be reusable. And Haskell's strong type system ensures that the use of those generic functions are correct and safe.
