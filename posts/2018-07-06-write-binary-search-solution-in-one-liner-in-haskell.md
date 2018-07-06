@@ -43,7 +43,7 @@ f x = x * x <= 26
 
 And we call this `f` function "predicate function". A predicate function is a function that takes some input and returns a Boolean value.
 
-### What's special with the predicate function?
+## What's special with the predicate function?
 
 If we map this `f` function over a list of possible `x`, then we get a new list that shows if its square is less than 26.
 
@@ -116,7 +116,7 @@ And we can also try `smallest False`, then it will return `6`, because `f x == F
 Just 6
 ```
 
-### Generalize into finding the square root of any number
+## Generalize into finding the square root of any number
 We were experimenting the API to find the square root of `26`, we can easily generalize it by providing a different function that takes a given number and returns predicate function
 
 ```haskell
@@ -133,11 +133,70 @@ Just 5
 And a generalized function to find the square root of any number:
 
 ```haskell
-findSquareRoot :: Int -> Maybe Int
-findSquareRoot n = largest True $ search positiveExponential divForever (f n)
+findSqrt :: Int -> Maybe Int
+findSqrt n = largest True $ search positiveExponential divForever (f n)
 ```
 
-### Exercise
+```
+> findSqrt 30000000
+Just 1732
+```
+
+## How to check it's really doing binary search?
+If we would like to see which number was used in each iteration, we can print the number out in the predicate function. Since the predicate introduces side effect, we need to use `searchM` instead which can take predicate functions that returns an `IO Boolean` value.
+
+```haskell
+searchM :: forall a m b. (Functor m, Monad m, Eq b) => SearchRange a -> Splitter a -> (a -> m b) -> m [Range b a]
+```
+
+In our case of finding the square root of an Int, the `searchM`'s type signature is
+```haskell
+searchM :: SearchRange Int -> Splitter Int -> (Int -> IO Bool) -> IO [Range Int Int]
+```
+
+With the following `traceInput`, we can print the number in each iteration.
+```haskell
+traceInput :: (Int -> Bool) -> Int -> IO Bool
+traceInput fn x = do
+  print x
+  return (fn x)
+
+traceFindSqrt :: Int -> IO (Maybe Int)
+traceFindSqrt t =
+  largest True <$> searchM positiveExponential divForever (traceInput (f t))
+```
+
+```
+> traceFindSqrt 30000000
+1
+2
+4
+8
+16
+32
+64
+128
+256
+512
+1024
+2048
+1025
+1537
+1793
+1665
+1729
+1761
+1745
+1737
+1733
+1731
+1732
+Just 1732
+```
+
+The iteration expanded the search range exponentially until `2048`, then started shrinking the search range all the way until get `1732`.
+
+## Exercise
 As an exercise, you can try to implement a binary search solution for finding the index of an item in a sorted array.
 
 Hint 1: The List structure in Haskell takes `O(N)` to access an item by index. Use `Data.Vector` instead as array implement in Haskell, which takes `O(1)` to access by index.
