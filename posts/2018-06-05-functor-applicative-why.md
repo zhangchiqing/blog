@@ -139,7 +139,7 @@ If we remember to validate the name, and now we have a `Maybe User` value, but s
 ```
 
 ## Extract the input validation part into a function
-Alright. Let's say we have other functions that tak `User` and returns a different `String`, for instance, a `bye` function:
+Alright. Let's say we have other functions that take `User` and returns a different `String`, for instance, a `bye` function:
 
 ```haskell
 bye :: User -> String
