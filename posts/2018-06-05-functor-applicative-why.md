@@ -5,13 +5,13 @@ tags: functional programming, functor, applicative, haskell
 ---
 
 ## Introduction
-This blog post is trying to explain two core concepts in Haskell - `Functor` and `Applicative`, which also exist in many other functional languages. `Functor` and `Applicative` are great abstractions that allows us to reuse lots of code.
+This blog post will explain two core concepts in Haskell –– Functor and Applicative, which also exist in many other functional languages. Functor and Applicative are great abstractions that allow us to reuse lots of code.
 
-However, when I was learning these concepts, it was difficult for me. Not just they are abstract, but because most of the articles and posts I read starting from introducing their definition, then giving examples.
+However, when I was learning these concepts, it was difficult for me. Not just because they're abstract, but because most of the articles and posts I read about Functor and Applicative start by introducing their definition and then give examples.
 
-I feel it should be the other round. It's easier to learn abstract things by seeing enough concrete instances or use cases of them.
+I feel it should be the other way around. It's easier to learn abstract things by seeing concrete instances or use cases of them.
 
-So in this post, I'm trying to start with some concrete examples and use cases then relate them to the definition of `Functor` and `Applicative`.
+So in this post, I'm starting with concrete examples then tying them back to the definitions of Functor and Applicative.
 
 ## Input validation
 Let's say we have a `greet` funcition in Javascript that takes a user object and returns a string:
@@ -27,16 +27,16 @@ If we try it in the node REPL, it should work.
 'Hello Alice'
 ```
 
-However, if we pass in an `undefined` value, it will throw an exception
+However, if we enter an `undefined` value, it will throw an exception
 ```
 > greet(undefined)
 TypeError: Cannot read property 'name' of undefined
 ...
 ```
 
-Why the `user` would be `undefined`?
+Why would the `user` be `undefined`?
 
-Well, Javascript is a untyped language, any variable could be `undefined`. This function assumes the input is not `undefined`. But it's common that we forgot about this assumption.
+Well, Javascript is an untyped language, so any variable could be `undefined`. This function assumes the input is not `undefined`. But it's common for developers to forget about this assumption.
 
 In order to handle the `undefined` input, we could wrap this function with a function that validates the input:
 
@@ -49,7 +49,7 @@ var checkAndGreet = function(user) {
 };
 ```
 
-So if the user is `undefined`, we wouldn't pass it to `greet`, but shortcircuit to return `undefined`.
+So if the user is `undefined`, we wouldn't pass it to `greet`, but short circuit to return `undefined`.
 
 ## `Maybe` type in Haskell
 Let's see how this case is handled in Haskell.
@@ -72,13 +72,13 @@ User "Alice"
 "Hello Alice"
 ```
 
-In Haskell, this case is handled by a data type called `Maybe`. This is the type declaration of `Maybe`, which says the generic `Maybe` type is either a `Just` values that contain other values, or a constant `Nothing` value.
+In Haskell, this case is handled by a data type called `Maybe`. This is the type declaration of `Maybe`, which says the generic `Maybe` type is either a `Just` value that contains other values, or a constant `Nothing` value.
 
 ```haskell
 data Maybe a = Nothing | Just a deriving (Eq, Ord)
 ```
 
-So `Maybe User` is a a type can presents two cases that can be `Nothing` or a `Just User`.
+So `Maybe User` is a type that can present two cases, either `Nothing` or a `Just User`.
 
 If the input is a `Maybe User`, then we can make a `checkAndGreet` to take that and return a `Maybe String`.
 
@@ -101,7 +101,7 @@ Nothing
 Just "Hello Alice"
 ```
 
-## How does it prevent our mistakes
+## How does it prevent mistakes?
 
 Where would we get a `Maybe User`?
 
@@ -113,9 +113,9 @@ validateAndMakeUser "" = Nothing
 validateAndMakeUser name = Just (User name)
 ```
 
-Let's look at our mistake we had before.
+Let's look at the mistake we had before.
 
-If we have a user name as `String`, and we forget to validate the name and pass it directly to `greet`, the Haskell compiler won't allow it. The compiler will say `greet` takes a `User`, which is not a `String`.
+If we have a user name of `String` and we forget to validate the name and pass it directly to `greet`, the Haskell compiler won't allow it. The compiler will say `greet` takes a `User`, which is not a `String`.
 
 ```
 > greet "Alice"
@@ -139,7 +139,7 @@ If we remember to validate the name, and now we have a `Maybe User` value, but s
 ```
 
 ## Extract the input validation part into a function
-Alright. Let's say we have other functions that takes `User` and returns a different `String`, for instance, a `bye` function:
+Alright. Let's say we have other functions that take `User` and returns a different `String`, for instance, a `bye` function:
 
 ```haskell
 bye :: User -> String
@@ -156,9 +156,9 @@ checkAndBye Nothing = Nothing
 checkAndBye (Just user) = Just (bye user)
 ```
 
-As you notice, the `checkAndGreet` and `checkAndBye` are very similar. We kind of repeating the logic here.
+As you probably noticed, the `checkAndGreet` and `checkAndBye` are very similar. We're kind of repeating the logic here.
 
-We could extract the common part into a function, and use that to make `checkAndGreet` and `checkAndBye`. And let's name this common function as `mapUser`.
+We could extract the common part into a function, and use that to make `checkAndGreet` and `checkAndBye`. Let's name this common function `mapUser`.
 
 ```haskell
 mapUser :: (User -> String) -> Maybe User -> Maybe String
@@ -182,7 +182,7 @@ checkAndBye = mapUser bye
 ```
 
 ## Generalize the `mapUser` function
-Let's take a look at the `mapUser` again. Even though this function called `mapUser`, but this function didn't actually use anything special about `User`, nor about `String`
+Let's take a look at the `mapUser` function again. Even though this function is called `mapUser`, it didn't actually use anything special about `User`, nor about `String`
 
 ```haskell
 mapUser :: (User -> String) -> Maybe User -> Maybe String
@@ -190,7 +190,7 @@ mapUser f Nothing = Nothing
 mapUser f (Just user) = Just (f user)
 ```
 
-If we replace `User` with a generic type `a` and replace `String` with a generic type `b`, then `mapUser` is equivlent to the `mapMaybe` function as below:
+If we replace `User` with a generic type `a` and replace `String` with a generic type `b`, then `mapUser` is equivalent to the `mapMaybe` function as below:
 
 ```haskell
 mapMaybe :: (a -> b) -> Maybe a -> Maybe b
@@ -198,7 +198,7 @@ mapMaybe f Nothing = Nothing
 mapMaybe f (Just a) = Just (f a)
 ```
 
-And we can refactor the `checkAndGreet` and `checkAndBye` with `mapMaybe`, and it will still type-check and work.
+Then we can refactor the `checkAndGreet` and `checkAndBye` with the `mapMaybe` function, and it will still type-check and work.
 ```haskell
 checkAndGreet :: Maybe User -> Maybe String
 checkAndGreet = mapMaybe greet
@@ -207,9 +207,9 @@ checkAndBye :: Maybe User -> Maybe String
 checkAndBye = mapMaybe bye
 ```
 
-Now we have a generic `mapMaybe` function that can take a function and returns a new function that can deal with the case where the input could be empty (`Nothing`).
+Now we have a generic `mapMaybe` function that can deal with a case where the input is empty (`Nothing`).
 
-With Haskell's strong type system, we can just write functions that process on concrete types, and if we need those functions to be able to process those Maybe value, where we get them from DB calls or HTTP request, we can now just wrap the function with `mapMaybe` to get a new function that is able to process over `Maybe` value.
+With Haskell's strong type system, we can just write functions that process on concrete types, and if we need those functions to process the Maybe values we get them from DB calls or HTTP request, we can now just wrap the function with `mapMaybe` to get a new function that is able to process over `Maybe` values.
 
 The `mapMaybe` function can be implemented in Javascript too. Given there is no `Maybe` type, we would just call it `mapNullable`:
 
@@ -239,13 +239,13 @@ console.log(checkAndBye(undefined)); // undefined
 ```
 
 ## Map over 2 `Maybe` values
-Let's back to our Haskell version. We have a generic `mapMaybe` to map a function over a `Maybe` value. But it seems only work for functions that take just 1 argument.
+Let's back to our Haskell version. We have a generic `mapMaybe` to map a function over a `Maybe` value. But it seems to only work for functions that take just one argument.
 
 ```haskell
 mapMaybe :: (a -> b) -> Maybe a -> Maybe b
 ```
 
-What if my function takes more than 1 argument? Is it possible to have a function that maps over multiple `Maybe` values? For example, `map2Maybes` and `map3Maybes` with the following type signatures:
+What if my function takes more than one argument? Is it possible to have a function that maps over multiple `Maybe` values? For example, `map2Maybes` and `map3Maybes` with the following type signatures:
 
 ```haskell
 map2Maybes :: (a -> b -> c) -> Maybe a -> Maybe b -> Maybe c
@@ -253,9 +253,9 @@ map3Maybes :: (a -> b -> c -> d) -> Maybe a -> Maybe b -> Maybe c -> Maybe d
 ...
 ```
 
-And let's call a function that takes `N` arguments as "N-arity" function. So `mapMaybe` is 1-arity function, and `map2Maybes` is 2-arity function, `map3Maybes` is 3-arity function.
+And let's call a function that takes `N` arguments an "N-arity" function. So `mapMaybe` is 1-arity function, and `map2Maybes` is 2-arity function, `map3Maybes` is 3-arity function.
 
-If we have the `map2Maybes` function, then we can use it to wrap a function that takes 2 `Maybe User` values as input.
+If we have the `map2Maybes` function, then we can use it to wrap a function that takes two `Maybe User` values as input.
 
 ```haskell
 showParents :: User -> User -> String
@@ -273,7 +273,7 @@ map2Maybes _ _ Nothing = Nothing
 map2Maybes f (Just a) (Just b) = Just (f a b)
 ```
 
-Similarly, you can implement `map3Maybes`, `map4Maybes` ... We can make as many as we want, however, we still need to write them manually each time to wrapping a N-arity function.
+Similarly, you can implement `map3Maybes`, `map4Maybes` ... We can make as many as we want. However, we still need to write them manually each time for wrapping an N-arity function.
 
 Is it possible to have a generic `mapNMaybes` function that works for functions that take any number of arguments?
 
@@ -294,16 +294,16 @@ Therefore, `showParents`'s type signature could also be written as:
 showParents :: User -> (User -> String)
 ```
 
-if we treat the 1-arity function `(User -> String)` as a value, then `showParents` can be passed to `mapMaybe`, and it will return a `Maybe (User -> String)` type
+If we treat the 1-arity function `(User -> String)` as a value, then `showParents` can be passed to `mapMaybe` and it will return a `Maybe (User -> String)` type
 
 ```
 > :t mapMaybe showParents (Just (User “Bob”))
 mapMaybe showParents (Just (User “Bob”)) :: Maybe (User -> String)
 ```
 
-But wait for a second, `Maybe` type can contain a function?
+But wait a second, can a `Maybe` type contain a function?
 
-Yes, why not? `Maybe a` is a generic type, and it can take any concrete type to make a new type. Since a function is also a concrete type, it can be wrapped in a `Maybe` value too. And I don't matter how many arguments it takes.
+Yes, why not? `Maybe a` is a generic type, and it can take any concrete type to make a new type. Since a function is also a concrete type, it can be wrapped in a `Maybe` value too. And it doesn't matter how many arguments it takes.
 
 For instance, we can just pass any function to one of the Maybe type constructor `Just`:
 
@@ -358,7 +358,7 @@ applyMaybe _ Nothing = Nothing
 applyMaybe (Just f) (Just a) = Just (f a)
 ```
 
-And the `checkAndShowParents` can be implemented by composing `mapMaybe`, `applyMaybe` and `showParents`
+And the `checkAndShowParents` can be implemented by compositing `mapMaybe`, `applyMaybe` and `showParents`
 
 ```haskell
 checkAndShowParents :: Maybe User -> Maybe User -> Maybe String
@@ -366,9 +366,9 @@ checkAndShowParents maybeFather maybeMother = applyMaybe (mapMaybe showParents m
 ```
 
 ## Generalize into N-arity function
-Now can we map over 2-arity function, can it apply to N-arity functions?
+Now that we can map over 2-arity functions, can it apply to N-arity functions?
 
-Yes. Observe the `applyMaybe`'s type signature, we can use it for a 3-arity functions or N-arity too:
+Yes. Observe the `applyMaybe`'s type signature and how we can use it for a 3-arity functions or N-arity too:
 
 ```haskell
 applyMaybe :: Maybe (a -> b -> c) -> Maybe a -> Maybe (b -> c)
@@ -377,7 +377,7 @@ applyMaybe :: Maybe (a -> b -> c -> d -> e) -> Maybe a -> Maybe (b -> c -> d -> 
 ...
 ```
 
-And with the following functions, then we can reduce a `Maybe` N-arity function value into a `Maybe` (N-1)-arity function value, which can be further reduced all the way to a `Maybe` value.
+And with the following functions we can reduce a `Maybe` N-arity function value into a `Maybe` (N-1)-arity function value, which can be further reduced all the way to a `Maybe` value.
 
 ```
 > add3 a b c = a + b + c + (1 :: Int)
@@ -406,7 +406,7 @@ Nothing
 ```
 
 ## Pattern of writing input validation for functions
-We've made a generic `mapMaybe` function and a `applyMaybe` function that can be used to wrap any N-arity functions to be able to take values from N `Maybe` values, and shortcircuits to return `Nothing` if any of the N Maybe value is `Nothing`.
+We've made a generic `mapMaybe` function and an `applyMaybe` function that can be used to wrap any N-arity functions. That way, they're able to take values from N `Maybe` and shortcircuit to return `Nothing` if any of the N Maybe values are `Nothing`.
 
 ```haskell
 greet :: User -> String
@@ -428,12 +428,12 @@ checkAndAdd3 :: Maybe Int -> Maybe Int -> Maybe Int -> Maybe Int
 checkAndAdd3 ma mb mc = add3 `mapMaybe` ma `applyMaybe` mb `applyMaybe` mc
 ```
 
-You might notice a pattern here, if we want to wrap a `N-arity` function with empty input checks, if the function has only 1 argument, we can just use `mayMaybe`. If there is more than 1 argument, we just append (`applyMaybe` argN) in the end.
+You might notice a pattern here: if we want to wrap an `N-arity` function with empty input checks and the function has only 1 argument, we can just use `mayMaybe`. If there is more than 1 argument, we just append (`applyMaybe` argN) in the end.
 
 ## Functor and Applicative
-OK, with the above examples and practices in mind, now it's the time to introduce the term `Functor` and `Applicative`. Let's see what are they.
+OK, with the above examples and practices in mind, now it's time to introduce the term `Functor` and `Applicative`.
 
-What is `Functor`?  `Functor` is a typeclass, which essentially defines a list of functions to implement.
+What is `Functor`?  `Functor` is a typeclass that essentially defines a list of functions to implement.
 
 `Functor` typeclass defines just one function `fmap` with the following type signature.
 
@@ -467,7 +467,7 @@ greet <$> Just (User "Alice")
 ## What is `Applicative`?
 `Applicative` is also a typeclass. To be an `Applicative`, the type has also to be a `Functor`.
 
-`Applicative` defines two functions `pure` and `<*>` with the following type signature.
+`Applicative` defines two functions, `pure` and `<*>`, with the following type signature:
 
 ```haskell
 class Functor f => Applicative f where
@@ -475,7 +475,7 @@ class Functor f => Applicative f where
   (<*>) :: f (a -> b) -> f a -> f b
 ```
 
-And `Maybe` is an instance of `Applicative`, refer to the type signature of `Just` and `applyMaybe`, these two functions are `Maybe` type's implementation for being `Applicative`.
+`Maybe` is an instance of `Applicative`. Refer to the type signature of `Just` and `applyMaybe`: these two functions are `Maybe` type's implementation for being `Applicative`.
 
 ```haskell
 Just :: a -> Maybe a
@@ -487,23 +487,23 @@ class Applicative Maybe where
   (<*>) = applyMaybe
 ```
 
-With the abstraction of `Functor` and `Applicative`, more generic functions can be built and reused. For example, the `liftA2` and `liftA3` are generic verion of the `map2Maybes` and `map3Maybes` for `Applicative`.
+The abstraction of `Functor` and `Applicative` allows more generic functions to be built and reused. For example, the `liftA2` and `liftA3` are generic versions of the `map2Maybes` and `map3Maybes` for `Applicative`.
 
 ```haskell
 liftA2 :: Applicative f => (a -> b -> c) -> f a -> f b -> f c
 liftA3 :: Applicative f => (a -> b -> c -> d) -> f a -> f b -> f c -> f d
 ```
 
-Both of `liftA2` and `liftA3` can be implemented with just `pure` and `<*>`. You can try to implement by yousrself.
+Both `liftA2` and `liftA3` can be implemented with just `pure` and `<*>`. You can try to implement them yourself.
 
 ### More Functor example
 So far we've seen an instance of `Functor` and `Applicative`, which is `Maybe`. Actually, there are a lot more of them defined in the [base module](https://www.stackage.org/haddock/lts-11.12/base-4.10.1.0/Prelude.html#control.i:Functor), and other modules.
 
-The most useful `Applicative`s (which also means they are `Functor`s) are `Maybe`, `Either`, `IO` and `List`, which means you can use the same functions `fmap`, `(<*>)` on all those types.
+The most useful Applicatives (which also means they are `Functor`s) are `Maybe`, `Either`, `IO` and `List`, which means you can use the same functions `fmap`, `(<*>)` on all those types.
 
-For instance, `IO` is also a `Functor` and an `Applicative`. And here is an example of how to read and parse environment variables with the functions provided by `Functor` and `Applicative`.
+For instance, `IO` is also a `Functor` and an `Applicative`. Here is an example of how to read and parse environment variables with the functions provided by `Functor` and `Applicative`.
 
-To read the env var by name, there is a `getEnv` function under the namespace `System.Environment` that takes `String` as env var name, and return the env var as `IO String`.
+To read the environment variables by name, there is a `getEnv` function under the namespace `System.Environment` that takes `String` as the env var name and returns the env var as `IO String`.
 
 ```haskell
 > import System.Environment (getEnv)
@@ -511,7 +511,7 @@ To read the env var by name, there is a `getEnv` function under the namespace `S
 getEnv :: String -> IO String
 ```
 
-`IO String` is a computation that might potentially run into an exception. For instance,
+`IO String` is a computation that might run into an exception. For instance,
 
 ```
 > getEnv "NAME"
@@ -548,7 +548,7 @@ getLogLevel :: IO Int
 getLogLevel = return 1
 ```
 
-Notice that the `read` function is a polymorphic parse function that can be either `String -> Int` or `String -> Bool` depending on where they are used.
+Notice that the `read` function is a polymorphic parse function that can be either `String -> Int` or `String -> Bool` depending on where it's used.
 
 So if the environment doesn't have `HOST`, then the `IO` will throw an exception:
 ```
@@ -556,7 +556,7 @@ So if the environment doesn't have `HOST`, then the `IO` will throw an exception
 *** Exception: HOST: getEnv: does not exist (no environment variable)
 ```
 
-If all the environment variables present, we will get a `Config` value with all the parsed value in it.
+If all the environment variables are present, we'll get a `Config` value with all the parsed value in it.
 ```
 > readConfig
 Config {cfgHost = "localhost", cfgPort = 4567, cfgDebug = True, cfgLogLevel = 1}
@@ -564,34 +564,34 @@ Config {cfgHost = "localhost", cfgPort = 4567, cfgDebug = True, cfgLogLevel = 1}
 
 ## Why?
 
-To summarize the points with a few QnAs.
+To summarize my points with a few QnAs.
 
 ### So what is `Functor` and `Applicative`?
 
-They are typeclasses (like interface in other languages) which defines the functions that their type instances have to implement.
+They are typeclasses (like interfaces in other languages) that define the functions that their type instances have to implement.
 
 ### Why do I need `Functor`?
 
 Because we want to reuse code.
 
-`Functor` generalizes how to map a function over a value to another. We used the `Maybe` type as an example to show why and how to use a generic `mapMaybe` function without having to deal with the empty case. And the `mapMaybe` is the implementation of `Functor` for `Maybe` type.
+`Functor` generalizes how to map a function from one value to another. We used the `Maybe` type as an example to show why and how to use a generic `mapMaybe` function without having to deal with the empty case. And the `mapMaybe` is the implementation of `Functor` for `Maybe` type.
 
 ### Why do I need `Applicative`?
 
-Because `Functor` can only map a function which takes just one argument. If we have a function that takes multiple arguments, we need `Applicative`.
+Because `Functor` can only map a function which takes one argument. If we have a function that takes multiple arguments, we need `Applicative`.
 
-`Applicative` provides abstraction of how to apply a function, which takes multiple arguments, over multiple values. We used `applyMaybe`, which is the implementation of `Applicative` for `Maybe` type, as an example to show how to map a function over multiple `Maybe` values without having to deal with the cases of any of these values being `Nothing`.
+`Applicative` provides abstraction for how to apply a function that takes multiple arguments over multiple values. We used `applyMaybe`, which is the implementation of `Applicative` for `Maybe` type, as an example to show how to map a function over multiple `Maybe` values without dealing with the case of any value being `Nothing`.
 
 ### Why do I need `Functor` and `Applicative` instead of just `mapMaybe` and `applyMaybe`?
 
-Because, there are more instances of `Functor` and `Applicative`. For example, `Maybe`, `Either`, `IO`, `List` are all `Functor` and `Applicative`, you can reuse the same `fmap` and `<*>` function to map functions over those values without having to write `mapMaybe`, `mapEither`, `mapList`, etc.
+There are more instances of `Functor` and `Applicative`. For example, `Maybe`, `Either`, `IO`, `List` are all `Functor` and `Applicative`. You can reuse the same `fmap` and `<*>` function to map functions over those values without having to write `mapMaybe`, `mapEither`, `mapList`, etc.
 
-And functions likes [`liftA2`](https://hackage.haskell.org/package/base-4.11.1.0/docs/Control-Applicative.html#v:liftA2), which is defined on top of `Functor` and `Applicative`, can also be reused for free without having to write `may2Maybes`, `map2IOs`, `map2Eithers` etc.
+And functions like [`liftA2`](https://hackage.haskell.org/package/base-4.11.1.0/docs/Control-Applicative.html#v:liftA2), which is defined on top of `Functor` and `Applicative`, can also be reused for free without having to write `may2Maybes`, `map2IOs`, `map2Eithers` etc.
 
 ### Conclusion
 
-`Functor` and `Applicative` are two key concepts in functional programming. We used the `Maybe` type and its use cases as examples to introduce the need of abstraction. `Functor` and `Applicative` are abstractions, they define what functions have to be implement for a type to be an instance of them.
+`Functor` and `Applicative` are two key concepts in functional programming. We used the `Maybe` type and its use cases as examples to introduce the need for abstraction. `Functor` and `Applicative` are abstractions; they define what functions have to be implemented for a type to be an instance of them.
 
-In functional programming, [there are more abstractions and type classes](https://wiki.haskell.org/File:Typeclassopedia-diagram.png) built on top of `Functor` and `Applicative`, this leads to a great amount code and logic to be reusable. And Haskell's strong type system ensures that the use of those generic functions are correct and safe.
+Functional programming has plenty [more abstractions and type classes](https://wiki.haskell.org/File:Typeclassopedia-diagram.png) built on top of `Functor` and `Applicative`. This makes a great amount of code and logic reusable, and Haskell's strong type system ensures that the use of those generic functions are correct and safe.
 
-Thanks for reading this blog post. Hopefully, I made `Functor` and `Applicative` a bit earlier to understand.
+Thanks for reading this blog post. Hopefully, I made `Functor` and `Applicative` a bit easier to understand.
